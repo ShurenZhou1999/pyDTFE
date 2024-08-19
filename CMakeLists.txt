@@ -19,7 +19,7 @@ set(CMAKE_C_COMPILER gcc)
 find_package(pybind11 REQUIRED)
 find_package(CGAL REQUIRED)
 
-add_library(src_dtfe MODULE main.cpp)
+add_library(src_dtfe MODULE ./src/main.cpp)
 
 target_link_libraries(src_dtfe PRIVATE CGAL::CGAL pybind11::module)
 

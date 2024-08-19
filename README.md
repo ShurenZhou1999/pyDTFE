@@ -1,5 +1,5 @@
 
-# Python-wrapped Delaunay Tessellation Field Interpolation
+# Delaunay Tessellation Field Interpolation (DTFE) with Python-wrapper
 
 ## Introduction
 

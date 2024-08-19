@@ -1,6 +1,6 @@
 import numpy as np
 import sys
-sys.path.append("./src/build")
+sys.path.append("./build")
 import src_dtfe
 
 
