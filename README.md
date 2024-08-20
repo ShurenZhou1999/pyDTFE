@@ -40,13 +40,14 @@ import sys
 sys.path.append("/path/to/pyDTFE/location")
 from pyDTFE import DTFE_3D
 
-L = 0.1
-pos = np.fromfile( DATA_PATH_POS, dtype="float32" )  # shape(Nparts, 3)
-vel = np.fromfile( DATA_PATH_VEL, dtype="float32" )  # shape(Nparts, 3)
-dtfe = DTFE_3D( pos, L=120, Nmesh=50)
+L = 120
+N = 50
+pos = np.fromfile( DATA_PATH_POS, dtype="float32" )  # shape(Nparticles, 3)
+vel = np.fromfile( DATA_PATH_VEL, dtype="float32" )  # shape(Nparticles, 3)
+dtfe = DTFE_3D( pos, L=L, Nmesh=N)
 results = dtfe.GridVel(vel)
-dens = results[0 ]    # shape(50, 50, 50)
-velo = results[1:]    # shape(3, 50, 50, 50)
+dens = results[0 ]    # shape(N, N, N)
+velo = results[1:]    # shape(3, N, N, N)
 ```
 
 Below is the result (note that the number density in this quick example is low, which may cause it to appear noisy).

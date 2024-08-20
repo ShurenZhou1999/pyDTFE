@@ -8,7 +8,7 @@
 #include "./DTFE.h"
 #include "./MathFuncs.cpp"
 #include "./FileIO.cpp"
-// #include "./DataType.cpp"
+
 #include "./DTFE_3D.cpp"
 #include "./DTFE_2D.cpp"
 #include "./pywrapper.cpp"
