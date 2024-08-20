@@ -43,6 +43,7 @@ class DTFE_3D:
     def GridVel(self, vel, nmesh=None):
         '''
         Interpolate the velocity field of particles to the 3D uniform mesh grid.
+        Asume the particle mass is 1, and one can rescale the output density to the physical value.
         Parameters
         ----------
         vel : Ndarray, shape (Nparts, 3). The velocity of particles.
