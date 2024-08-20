@@ -40,7 +40,7 @@ import sys
 sys.path.append("/path/to/pyDTFE/location")
 from pyDTFE import DTFE_3D
 
-L = 60          # Mpc/h
+L = 60  # Mpc/h
 N = 100
 pos = np.fromfile( DATA_PATH_POS, dtype="float32" )  # shape(Nparticles, 3)
 vel = np.fromfile( DATA_PATH_VEL, dtype="float32" )  # shape(Nparticles, 3)
