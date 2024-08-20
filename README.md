@@ -40,8 +40,8 @@ import sys
 sys.path.append("/path/to/pyDTFE/location")
 from pyDTFE import DTFE_3D
 
-L = 120
-N = 50
+L = 60          # Mpc/h
+N = 100
 pos = np.fromfile( DATA_PATH_POS, dtype="float32" )  # shape(Nparticles, 3)
 vel = np.fromfile( DATA_PATH_VEL, dtype="float32" )  # shape(Nparticles, 3)
 dtfe = DTFE_3D( pos, L=L, Nmesh=N)
@@ -50,7 +50,7 @@ dens = results[0 ]    # shape(N, N, N)
 velo = results[1:]    # shape(3, N, N, N)
 ```
 
-Below is the result (note that the number density in this quick example is low, which may cause it to appear noisy).
+Below shows the result (note that the number density in this quick example is low, which may cause it to appear noisy).
 
 ```python
 fig, axes = plt.subplots( 1, 2, dpi=100, figsize=(8, 4) )
