@@ -69,7 +69,7 @@ class DTFE_3D:
         '''
         if vel.dtype != np.float32:
             vel = vel.astype(np.float32)
-        return src_dtfe.DTFE_3D_SampleVel( self.pos, vel, samplings, self.L, self.paddingRate )
+        return src_dtfe.DTFE_SampleVel( self.pos, vel, samplings, self.L, self.paddingRate )
 
     def SampleScalar(self, scalar, samplings):
         '''
@@ -81,7 +81,7 @@ class DTFE_3D:
         '''
         if vel.dtype != np.float32:
             vel = vel.astype(np.float32)
-        return src_dtfe.DTFE_3D_SampleScalar( self.pos, scalar, samplings, self.L, self.paddingRate )
+        return src_dtfe.DTFE_SampleScalar( self.pos, scalar, samplings, self.L, self.paddingRate )
     
 
 
@@ -132,6 +132,29 @@ class DTFE_2D:
         if nmesh is None:
             raise ValueError("Nmesh is not set.")
         return src_dtfe.DTFE_2D_Grid( self.pos, vel, nmesh, self.L, self.paddingRate )
+    
+    def SampleVel(self, vel, samplings:np.array ):
+        '''
+        Interpolate the velocity field of particles to the given sampling position.
+        Parameters
+        ----------
+        vel : Ndarray, shape (Nparts, 2). The velocity of particles.
+        samplings : int. The position of the interpolaton sampling point, shape as (Nsampling, 3).
+        '''
+        if vel.dtype != np.float32:
+            vel = vel.astype(np.float32)
+        return src_dtfe.DTFE_SampleVel( self.pos, vel, samplings, self.L, self.paddingRate )
 
+    def SampleScalar(self, scalar, samplings):
+        '''
+        Interpolate the scalar field value of particles to the given sampling position.
+        Parameters
+        ----------
+        scalar : Ndarray, shape (Nparts). The scalar field value of particles.
+        samplings : int. The position of the interpolaton sampling point, shape as (Nsampling, 2).
+        '''
+        if vel.dtype != np.float32:
+            vel = vel.astype(np.float32)
+        return src_dtfe.DTFE_SampleScalar( self.pos, scalar, samplings, self.L, self.paddingRate )
 
     

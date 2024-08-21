@@ -1,5 +1,5 @@
 
-# Python-wrapped Delaunay Tessellation Field Interpolation
+# Python-wrapped Delaunay Tessellation Field Interpolation (pyDTFE)
 
 ## Introduction
 
@@ -7,11 +7,14 @@ In this project, we offer a user-friendly Python implementation of the **Delauna
 
 ### Feature
 * DTFE interpolation of the particle density & velocity on the uniform grid for 3D/2D simulation box.
-* DTFE interpolation of any 3D scalar field.
-* Interpolation on arbitrary sampling points.
+* DTFE interpolation of any 3D/2D scalar field.
+* Interpolation on arbitrary 3D/2D sampling points.
 * High efficiency with C++ backend and easy coding with Python language.
+* The code is more compact, allowing for direct modification.
 
 The tool is currently under development, and additional practical features, such as power spectrum calculation, will be added in the near future.
+
+
 
 ## Compilation
 To use this tool, the C++ codes and its dependencies have to be previously installed and compiled. 

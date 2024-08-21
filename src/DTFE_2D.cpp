@@ -102,7 +102,7 @@ template <typename VT>
 void PaddingData_2D( 
     vector<vector<double>>& XY , 
     VT& PaddedField , 
-    double L[NDIM] = nullptr,
+    double L[NDIM2] = nullptr,
     double PaddingRate = 0.03
     )
 {
@@ -192,6 +192,7 @@ DToutput2 To_Delaunay_2D(
 
 
 // ----------------------------------------------------------------------------------------
+/* Interpolate the density & velocity field on 2D grid mesh */
 // ----------------------------------------------------------------------------------------
 
 
@@ -257,6 +258,118 @@ MeshOutput_2D<double> InterploateGrid_2D(
 
 
 
+
 // ----------------------------------------------------------------------------------------
+/* Interpolate the density & velocity field on given 2D sampling points */
 // ----------------------------------------------------------------------------------------
+
+vector<vector<double>> Interploate_2D( 
+            DToutput2 output,
+            vector<vector<double>> samplingPoint
+            )
+{
+    Delaunay2 dt = output.tess;
+    Delaunay2::Face_handle current;
+
+    int Nsamples = samplingPoint[0].size();
+    vector<vector<double>> meshValues(3, vector<double>(Nsamples, 0.));  // (Nkind, Nsamples)
+
+    for(int isam=0; isam<Nsamples; isam++)
+    {
+        double Gridx = samplingPoint[0][isam];
+        double Gridy = samplingPoint[1][isam];
+        Point2 isample(Gridx, Gridy);
+        current = dt.locate(isample) ;
+        /* ------------------------------------------------------------------------------ */
+
+        double diff_den[NDIM2];             // vector, $\rho_{\li} - \rho_{l0}$
+        double diff_pos[NDIM2][NDIM2];       // matrix, in i-th row $\vec{x}_{li} - \vec{x}_{l0}$
+        double diff_vel[NDIM2][NDIM2];       // matrix, in i-th row $\vec{v}_{li} - \vec{v}_{l0}$
+        size_t ivert0 = current->vertex(0)->info() ;    // base vertex
+        Point2 baseP  = current->vertex(0)->point();
+        for(int i=0; i<NDIM2; i++)     // over 3 vertex, other than the base
+        {
+            size_t ivert = current->vertex(i+1)->info() ;
+            diff_den[i] = output.field_rho[ivert] - output.field_rho[ivert0] ;
+            for(int j=0; j<NDIM2; j++)    // over 3 dimensions (x, y, z)
+            {
+                diff_pos[i][j] = CGAL::to_double( current->vertex(i+1)->point()[j] - baseP[j] );
+                diff_vel[i][j] = output.field_vel[j][ivert] - output.field_vel[j][ivert0] ;    // The velocity is stored as (dims, particles)
+            }
+        }
+        double posMatrixInverse[NDIM2][NDIM2];
+        double Grad_den[NDIM2];
+        double Grad_vel[NDIM2][NDIM2];
+        matrixInverse_2x2( diff_pos, posMatrixInverse );
+        matrixMultiplication( posMatrixInverse, diff_den, Grad_den );    //computes the density gradient = posMatrixInverse * dens
+        matrixMultiplication( posMatrixInverse, diff_vel, Grad_vel );
+        matrixTranspose(Grad_vel);
+        
+        double dpos[NDIM2] ={Gridx - CGAL::to_double(baseP[0]), 
+                            Gridy - CGAL::to_double(baseP[1]) };
+        meshValues[0][isam] = output.field_rho[ivert0]    + dotProduct2(Grad_den, dpos);
+        meshValues[1][isam] = output.field_vel[0][ivert0] + dotProduct2(Grad_vel[0], dpos);
+        meshValues[2][isam] = output.field_vel[1][ivert0] + dotProduct2(Grad_vel[1], dpos);
+        /* ------------------------------------------------------------------------------ */
+    }
+    return meshValues;
+}
+
+
+
+// ----------------------------------------------------------------------------------------
+/* Interpolate the scalar field on given 2D sampling points */
+// ----------------------------------------------------------------------------------------
+
+vector<double> Interploate_2D_ScalarField( 
+            DToutput2 output,
+            vector<vector<double>> samplingPoint, 
+            vector<double> scalarField       // same size as particle position number
+            )
+{
+    Delaunay2 dt = output.tess;
+    Delaunay2::Face_handle current;
+
+    int Nsamples = samplingPoint[0].size();
+    vector<double> out_dens;
+    vector<double> out_scal;
+
+    for(int isam=0; isam<Nsamples; isam++)
+    {
+        double Gridx = samplingPoint[0][isam];
+        double Gridy = samplingPoint[1][isam];
+        Point2 isample(Gridx, Gridy );
+        current = dt.locate(isample) ;
+        /* ------------------------------------------------------------------------------ */
+
+        double diff_den[NDIM2];
+        double diff_pos[NDIM2][NDIM2];
+        double diff_scal[NDIM2];
+        size_t ivert0 = current->vertex(0)->info() ;
+        Point2 baseP  = current->vertex(0)->point();
+        for(int i=0; i<NDIM2; i++)
+        {
+            size_t ivert = current->vertex(i+1)->info() ;
+            diff_den[i]  = output.field_rho[ivert] - output.field_rho[ivert0] ;
+            diff_scal[i] = scalarField[ivert] - scalarField[ivert0] ;
+            for(int j=0; j<NDIM2; j++)
+                diff_pos[i][j] = CGAL::to_double( current->vertex(i+1)->point()[j] - baseP[j] );
+        }
+        double posMatrixInverse[NDIM2][NDIM2];
+        double Grad_den[NDIM2];
+        double Grad_scal[NDIM2];
+        matrixInverse_2x2( diff_pos, posMatrixInverse );
+        matrixMultiplication( posMatrixInverse, diff_den,  Grad_den  );    //computes the density gradient = posMatrixInverse * dens
+        matrixMultiplication( posMatrixInverse, diff_scal, Grad_scal );
+        
+        double dpos[NDIM2] ={Gridx - CGAL::to_double(baseP[0]), 
+                            Gridy - CGAL::to_double(baseP[1])  };
+        out_dens[isam] = output.field_rho[ivert0] + dotProduct2(Grad_den , dpos);
+        out_scal[isam] = scalarField[ivert0]      + dotProduct2(Grad_scal, dpos);
+        /* ------------------------------------------------------------------------------ */
+    }
+    return out_scal;
+}
+
+
 

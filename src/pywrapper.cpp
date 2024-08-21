@@ -141,7 +141,8 @@ py::array_t<double> DTFE_2D_Grid(
 /* Interpolation on sampling points */
 // ----------------------------------------------------------------------------------------
 
-py::array_t<double> DTFE_3D_SampleVel( 
+/* For both 3D and 2D case */
+py::array_t<double> DTFE_SampleVel( 
             py::array_t<float> arr_pos_, 
             py::array_t<float> arr_vel_, 
             py::array_t<float> arr_sampling_,
@@ -150,8 +151,9 @@ py::array_t<double> DTFE_3D_SampleVel(
             )
 {
     py::module_ np = py::module_::import("numpy");
-    auto Nsamp = arr_sampling_.shape(0) ;
-    py::tuple args = py::make_tuple( 4, Nsamp );
+    auto Nsamp  = arr_sampling_.shape(0) ;
+    auto Nshape = arr_sampling_.shape(1) ;
+    py::tuple args = py::make_tuple( Nshape+1, Nsamp );
     py::array_t<double> arr_out_ = np.attr("zeros")( "shape"_a = args );
     auto arr_out = arr_out_.mutable_unchecked<2>();
 
@@ -159,21 +161,37 @@ py::array_t<double> DTFE_3D_SampleVel(
     vector<vector<double>> vel   = NdataToVector( arr_vel_ );
     vector<vector<double>> samps = NdataToVector( arr_sampling_ );
 
-    double L[3] = { Boxsize, Boxsize, Boxsize };
-    if(paddingRate>1e-10)
-        PaddingData(pos, vel, L, paddingRate);
-    DToutput output = To_Delaunay_3D( pos );
-    output.field_vel = vel ;
-    vector<vector<double>> meshValues = Interploate_3D( output, samps );
+    vector<vector<double>> meshValues;
+    if(Nshape==3)
+    {
+        double L[3] = { Boxsize, Boxsize, Boxsize };
+        if(paddingRate>1e-10)
+            PaddingData(pos, vel, L, paddingRate);
+        DToutput output = To_Delaunay_3D( pos );
+        output.field_vel = vel ;
+        meshValues = Interploate_3D( output, samps );
+    }
+    else if(Nshape==2)
+    {
+        double L[2] = { Boxsize, Boxsize };
+        if(paddingRate>1e-10)
+            PaddingData_2D(pos, vel, L, paddingRate);
+        DToutput2 output = To_Delaunay_2D( pos );
+        output.field_vel = vel ;
+        meshValues = Interploate_2D( output, samps );
+    }
+    else
+        throw runtime_error("DTFE_SampleVel::Invalid shape of sampling points.");
 
-    for(int i0=0; i0<4; i0++)
+    for(int i0=0; i0<Nshape; i0++)
         for(int i1=0; i1<Nsamp; i1++)
             arr_out(i0, i1) = meshValues[i0][i1];
     return arr_out_;
 }
 
 
-py::array_t<double> DTFE_3D_SampleScalar( 
+/* For both 3D and 2D case */
+py::array_t<double> DTFE_SampleScalar( 
             py::array_t<float> arr_pos_, 
             py::array_t<float> arr_scalar_, 
             py::array_t<float> arr_sampling_,
@@ -182,7 +200,8 @@ py::array_t<double> DTFE_3D_SampleScalar(
             )
 {
     py::module_ np = py::module_::import("numpy");
-    auto Nsamp = arr_sampling_.shape(0) ;
+    auto Nsamp  = arr_sampling_.shape(0) ;
+    auto Nshape = arr_sampling_.shape(1) ;
     py::tuple args = py::make_tuple( Nsamp );
     py::array_t<double> arr_out_ = np.attr("zeros")( "shape"_a = args );
     auto arr_out = arr_out_.mutable_unchecked<1>();
@@ -191,13 +210,27 @@ py::array_t<double> DTFE_3D_SampleScalar(
     vector<double>         scalar   = VectorToVector( arr_scalar_   );
     vector<vector<double>> sampling = NdataToVector(  arr_sampling_ );
 
-    double L[3] = { Boxsize, Boxsize, Boxsize };
-    if(paddingRate>1e-10)
-        PaddingData(pos, scalar, L, paddingRate);
-    DToutput output = To_Delaunay_3D( pos );
-    vector<double> meshValues = Interploate_3D_ScalarField( output, sampling, scalar );
+    vector<double> meshValues;
+    if(Nshape==3)
+    {
+        double L[3] = { Boxsize, Boxsize, Boxsize };
+        if(paddingRate>1e-10)
+            PaddingData(pos, scalar, L, paddingRate);
+        DToutput output = To_Delaunay_3D( pos );
+        meshValues = Interploate_3D_ScalarField( output, sampling, scalar );
+    }
+    else if(Nshape==2)
+    {
+        double L[2] = { Boxsize, Boxsize };
+        if(paddingRate>1e-10)
+            PaddingData_2D(pos, scalar, L, paddingRate);
+        DToutput2 output = To_Delaunay_2D( pos );
+        meshValues = Interploate_2D_ScalarField( output, sampling, scalar );
+    }
+    else
+        throw runtime_error("DTFE_SampleScalar::Invalid shape of sampling points.");
 
-    for(int i=0; i<Nsamp; arr_out(++i)=meshValues[i] );
+    for(int i=0; i<Nsamp; arr_out(i++)=meshValues[i] );
     return arr_out_;
 }
 

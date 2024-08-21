@@ -32,11 +32,11 @@ PYBIND11_MODULE( src_dtfe, m )
             "2D DTFE Velocity field interpolation on regular grid", 
             "position"_a, "velocity"_a, "Nmesh"_a, "Boxsize"_a, "paddingRate"_a  );
 
-    m.def("DTFE_3D_SampleVel", &DTFE_3D_SampleVel, 
-            "3D DTFE Velocity field interpolation on given samping points", 
+    m.def("DTFE_SampleVel", &DTFE_SampleVel, 
+            "3D/2D DTFE Velocity field interpolation on given samping points", 
             "position"_a, "velocity"_a, "sampling"_a, "Boxsize"_a, "paddingRate"_a  );
-    m.def("DTFE_3D_SampleScalar", &DTFE_3D_SampleScalar, 
-            "3D DTFE Scalar filed interpolation on given samping points", 
+    m.def("DTFE_SampleScalar", &DTFE_SampleScalar, 
+            "3D/2D DTFE Scalar filed interpolation on given samping points", 
             "position"_a, "scalar"_a, "sampling"_a, "Boxsize"_a, "paddingRate"_a  );
 
     //m.def("Test", &Test, "Test", 
