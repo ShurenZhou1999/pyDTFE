@@ -4,6 +4,7 @@
 #include <iterator>
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include <mpi.h>
 
 #include "./DTFE.h"
 #include "./MathFuncs.cpp"
@@ -14,7 +15,6 @@
 #include "./pywrapper.cpp"
 
 namespace py = pybind11;
-using namespace std;
 using namespace py::literals;
 
 

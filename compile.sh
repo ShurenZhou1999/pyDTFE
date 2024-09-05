@@ -1,12 +1,17 @@
 # ------------------------------------------------------------------
-# load the necessary modules
+## load the necessary modules
 module load compiler/gcc-11.3.0
+#module load compiler/gcc-10.2.0
 module load boost/1_73_0
 module load compiler/cmake-3.25.1
 
+# If something wrong arised, you might try other possible MPI modules
+module load mpi/intel-2018
+
+
 # ------------------------------------------------------------------
 ## The cmake should be in the same environment when installing the CGAL-package, since it requires the same gcc/g++ compiler.
-## $module load anaconda/anaconda-mamba
+# module load anaconda/anaconda-mamba
 ## It does not properly load the conda environment in the subshells.
 source /opt/conda/conda-4.12.0/etc/profile.d/conda.sh
 conda activate shuren_env3.9

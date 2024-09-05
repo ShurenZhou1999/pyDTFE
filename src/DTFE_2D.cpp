@@ -196,13 +196,13 @@ DToutput2 To_Delaunay_2D(
 // ----------------------------------------------------------------------------------------
 
 
-MeshOutput_2D<double> InterploateGrid_2D( 
+MeshOutput_2D<float> InterploateGrid_2D( 
             DToutput2 output,
             double L[NDIM2], int Ngrid[NDIM2] 
             )
 {
     vector<double> dx = { L[0]/Ngrid[0], L[1]/Ngrid[1] };
-    MeshOutput_2D<double> meshValues(Ngrid);
+    MeshOutput_2D<float> meshValues(Ngrid);
 
     Delaunay2 dt = output.tess;
     Delaunay2::Locate_type lt;
@@ -247,9 +247,9 @@ MeshOutput_2D<double> InterploateGrid_2D(
             
             double dpos[NDIM2] = {  Gridx - CGAL::to_double(baseP[0]), 
                                     Gridy - CGAL::to_double(baseP[1]) };
-            meshValues.Mesh_rho[i0][i1] = output.field_rho[ivert0]    + dotProduct2(Grad_den, dpos);
-            meshValues.Mesh_vx[i0][i1]  = output.field_vel[0][ivert0] + dotProduct2(Grad_vel[0], dpos);
-            meshValues.Mesh_vy[i0][i1]  = output.field_vel[1][ivert0] + dotProduct2(Grad_vel[1], dpos);
+            meshValues.Mesh_rho[i0][i1] = (float)( output.field_rho[ivert0]    + dotProduct2(Grad_den, dpos) );
+            meshValues.Mesh_vx[i0][i1]  = (float)( output.field_vel[0][ivert0] + dotProduct2(Grad_vel[0], dpos) );
+            meshValues.Mesh_vy[i0][i1]  = (float)( output.field_vel[1][ivert0] + dotProduct2(Grad_vel[1], dpos) );
             /* ------------------------------------------------------------------------------ */
         }
     }
@@ -263,7 +263,7 @@ MeshOutput_2D<double> InterploateGrid_2D(
 /* Interpolate the density & velocity field on given 2D sampling points */
 // ----------------------------------------------------------------------------------------
 
-vector<vector<double>> Interploate_2D( 
+vector<vector<float>> Interploate_2D( 
             DToutput2 output,
             vector<vector<double>> samplingPoint
             )
@@ -272,7 +272,7 @@ vector<vector<double>> Interploate_2D(
     Delaunay2::Face_handle current;
 
     int Nsamples = samplingPoint[0].size();
-    vector<vector<double>> meshValues(3, vector<double>(Nsamples, 0.));  // (Nkind, Nsamples)
+    vector<vector<float>> meshValues(3, vector<float>(Nsamples, 0.));  // (Nkind, Nsamples)
 
     for(int isam=0; isam<Nsamples; isam++)
     {
@@ -307,9 +307,9 @@ vector<vector<double>> Interploate_2D(
         
         double dpos[NDIM2] ={Gridx - CGAL::to_double(baseP[0]), 
                             Gridy - CGAL::to_double(baseP[1]) };
-        meshValues[0][isam] = output.field_rho[ivert0]    + dotProduct2(Grad_den, dpos);
-        meshValues[1][isam] = output.field_vel[0][ivert0] + dotProduct2(Grad_vel[0], dpos);
-        meshValues[2][isam] = output.field_vel[1][ivert0] + dotProduct2(Grad_vel[1], dpos);
+        meshValues[0][isam] = (float)( output.field_rho[ivert0]    + dotProduct2(Grad_den, dpos) );
+        meshValues[1][isam] = (float)( output.field_vel[0][ivert0] + dotProduct2(Grad_vel[0], dpos) );
+        meshValues[2][isam] = (float)( output.field_vel[1][ivert0] + dotProduct2(Grad_vel[1], dpos) );
         /* ------------------------------------------------------------------------------ */
     }
     return meshValues;
@@ -321,7 +321,7 @@ vector<vector<double>> Interploate_2D(
 /* Interpolate the scalar field on given 2D sampling points */
 // ----------------------------------------------------------------------------------------
 
-vector<double> Interploate_2D_ScalarField( 
+vector<float> Interploate_2D_ScalarField( 
             DToutput2 output,
             vector<vector<double>> samplingPoint, 
             vector<double> scalarField       // same size as particle position number
@@ -331,8 +331,8 @@ vector<double> Interploate_2D_ScalarField(
     Delaunay2::Face_handle current;
 
     int Nsamples = samplingPoint[0].size();
-    vector<double> out_dens;
-    vector<double> out_scal;
+    vector<float> out_dens;
+    vector<float> out_scal;
 
     for(int isam=0; isam<Nsamples; isam++)
     {
@@ -364,8 +364,8 @@ vector<double> Interploate_2D_ScalarField(
         
         double dpos[NDIM2] ={Gridx - CGAL::to_double(baseP[0]), 
                             Gridy - CGAL::to_double(baseP[1])  };
-        out_dens[isam] = output.field_rho[ivert0] + dotProduct2(Grad_den , dpos);
-        out_scal[isam] = scalarField[ivert0]      + dotProduct2(Grad_scal, dpos);
+        out_dens[isam] = (float)( output.field_rho[ivert0] + dotProduct2(Grad_den , dpos) );
+        out_scal[isam] = (float)( scalarField[ivert0]      + dotProduct2(Grad_scal, dpos) );
         /* ------------------------------------------------------------------------------ */
     }
     return out_scal;

@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <math.h>
 #include <iterator>
+#include <boost/multi_array.hpp>
 
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h> /* CGAL kernel */
 #include <CGAL/Periodic_3_Delaunay_triangulation_traits_3.h>  /* periodic DT */
@@ -61,16 +62,16 @@ template <typename T>
 class MeshOutput_3D
 {
     public:
-    vector<vector<vector<T>>> Mesh_rho ; 
-    vector<vector<vector<T>>> Mesh_vx ; 
-    vector<vector<vector<T>>> Mesh_vy ; 
-    vector<vector<vector<T>>> Mesh_vz ;
+    boost::multi_array<T, 3> Mesh_rho;
+    boost::multi_array<T, 3> Mesh_vx;
+    boost::multi_array<T, 3> Mesh_vy;
+    boost::multi_array<T, 3> Mesh_vz;
     MeshOutput_3D(int Ngrid[NDIM])
     {
-        Mesh_rho.resize(Ngrid[0], vector<vector<T>>(Ngrid[1], vector<T>(Ngrid[2], 0.))); 
-        Mesh_vx.resize( Ngrid[0], vector<vector<T>>(Ngrid[1], vector<T>(Ngrid[2], 0.))); 
-        Mesh_vy.resize( Ngrid[0], vector<vector<T>>(Ngrid[1], vector<T>(Ngrid[2], 0.))); 
-        Mesh_vz.resize( Ngrid[0], vector<vector<T>>(Ngrid[1], vector<T>(Ngrid[2], 0.))); 
+        Mesh_rho.resize(boost::extents[Ngrid[0]][Ngrid[1]][Ngrid[2]]); 
+        Mesh_vx.resize(boost::extents[Ngrid[0]][Ngrid[1]][Ngrid[2]]);
+        Mesh_vy.resize(boost::extents[Ngrid[0]][Ngrid[1]][Ngrid[2]]);
+        Mesh_vz.resize(boost::extents[Ngrid[0]][Ngrid[1]][Ngrid[2]]);
     }
 };
 
@@ -86,11 +87,8 @@ inline void insert_array3D(
     size_t index, 
     double a0, double a1, double a2  )
 {
-    A[0].push_back( A[0][index] +a0 );
-    A[1].push_back( A[1][index] +a1 );
-    A[2].push_back( A[2][index] +a2 );
-    for(size_t i=0; i<3; i++)
-        B[i].push_back( B[i][index] );
+    A.push_back( vector<double>{ A[index][0]+a0, A[index][1]+a1, A[index][2]+a2 } );
+    B.push_back( B[index] );
 }
 
 /* pad the 3D scalar field */
@@ -100,9 +98,7 @@ inline void insert_array3D(
     size_t index, 
     double a0, double a1, double a2  )
 {
-    A[0].push_back( A[0][index] +a0 );
-    A[1].push_back( A[1][index] +a1 );
-    A[2].push_back( A[2][index] +a2 );
+    A.push_back( vector<double>{ A[index][0]+a0, A[index][1]+a1, A[index][2]+a2 } );
     B.push_back( B[index] );
 }
 
@@ -116,7 +112,7 @@ void PaddingData(
     double PaddingRate = 0.03
     )
 {
-    size_t Nsize = XYZ[0].size();
+    size_t Nsize = XYZ.size();
 
     double Lx = L[0], Ly = L[1], Lz = L[2];
     double ddx = PaddingRate * Lx, ddy = PaddingRate * Ly, ddz = PaddingRate * Lz;
@@ -124,58 +120,58 @@ void PaddingData(
     double Lx_max = Lx-ddx, Ly_max = Ly-ddy, Lz_max = Lz-ddz;
     for(size_t i=0; i<Nsize; i++)
     {
-        if( XYZ[0][i] < Lx_min ) insert_array3D( XYZ, PaddedField, i, Lx, 0, 0 );
-        else if( XYZ[0][i] > Lx_max ) insert_array3D( XYZ, PaddedField, i, -Lx, 0, 0 );
+        if( XYZ[i][0] < Lx_min ) insert_array3D( XYZ, PaddedField, i, Lx, 0, 0 );
+        else if( XYZ[i][0] > Lx_max ) insert_array3D( XYZ, PaddedField, i, -Lx, 0, 0 );
         // ---------------------------------------------------------------------
-        if( XYZ[1][i] < Ly_min )
+        if( XYZ[i][1] < Ly_min )
         {
             insert_array3D( XYZ, PaddedField, i, 0, Ly, 0 );
-            if( XYZ[0][i] < Lx_min ) insert_array3D( XYZ, PaddedField, i, Lx, Ly, 0 );
-            else if( XYZ[0][i] > Lx_max ) insert_array3D( XYZ, PaddedField, i, -Lx, Ly, 0 );
+            if( XYZ[i][0] < Lx_min ) insert_array3D( XYZ, PaddedField, i, Lx, Ly, 0 );
+            else if( XYZ[i][0] > Lx_max ) insert_array3D( XYZ, PaddedField, i, -Lx, Ly, 0 );
         }
         // ---------------------------------------------------------------------
-        else if( XYZ[1][i] > Ly_max )
+        else if( XYZ[i][1] > Ly_max )
         {
             insert_array3D( XYZ, PaddedField, i, 0, -Ly, 0 );
-            if( XYZ[0][i] < Lx_min ) insert_array3D( XYZ, PaddedField, i, Lx, -Ly, 0 );
-            else if( XYZ[0][i] > Lx_max ) insert_array3D( XYZ, PaddedField, i, -Lx, -Ly, 0 );
+            if( XYZ[i][0] < Lx_min ) insert_array3D( XYZ, PaddedField, i, Lx, -Ly, 0 );
+            else if( XYZ[i][0] > Lx_max ) insert_array3D( XYZ, PaddedField, i, -Lx, -Ly, 0 );
         }
         // ---------------------------------------------------------------------
-        if( XYZ[2][i] < Lz_min )
+        if( XYZ[i][2] < Lz_min )
         {
             insert_array3D( XYZ, PaddedField, i, 0, 0, Lz );
-            if( XYZ[0][i] < Lx_min ) insert_array3D( XYZ, PaddedField, i, Lx, 0, Lz );
-            else if( XYZ[0][i] > Lx_max ) insert_array3D( XYZ, PaddedField, i, -Lx, 0, Lz );
-            if( XYZ[1][i] < Ly_min )
+            if( XYZ[i][0] < Lx_min ) insert_array3D( XYZ, PaddedField, i, Lx, 0, Lz );
+            else if( XYZ[i][0] > Lx_max ) insert_array3D( XYZ, PaddedField, i, -Lx, 0, Lz );
+            if( XYZ[i][1] < Ly_min )
             {
                 insert_array3D( XYZ, PaddedField, i, 0, Ly, Lz );
-                if( XYZ[0][i] < Lx_min ) insert_array3D( XYZ, PaddedField, i, Lx, Ly, Lz );
-                else if( XYZ[0][i] > Lx_max ) insert_array3D( XYZ, PaddedField, i, -Lx, Ly, Lz );
+                if( XYZ[i][0] < Lx_min ) insert_array3D( XYZ, PaddedField, i, Lx, Ly, Lz );
+                else if( XYZ[i][0] > Lx_max ) insert_array3D( XYZ, PaddedField, i, -Lx, Ly, Lz );
             }
-            else if( XYZ[1][i] > Ly_max )
+            else if( XYZ[i][1] > Ly_max )
             {
                 insert_array3D( XYZ, PaddedField, i, 0, -Ly, Lz );
-                if( XYZ[0][i] < Lx_min ) insert_array3D( XYZ, PaddedField, i, Lx, -Ly, Lz );
-                else if( XYZ[0][i] > Lx_max ) insert_array3D( XYZ, PaddedField, i, -Lx, -Ly, Lz );
+                if( XYZ[i][0] < Lx_min ) insert_array3D( XYZ, PaddedField, i, Lx, -Ly, Lz );
+                else if( XYZ[i][0] > Lx_max ) insert_array3D( XYZ, PaddedField, i, -Lx, -Ly, Lz );
             }
         }
         // ---------------------------------------------------------------------
-        else if( XYZ[2][i] > Lz_max )
+        else if( XYZ[i][2] > Lz_max )
         {
             insert_array3D( XYZ, PaddedField, i, 0, 0, -Lz );
-            if( XYZ[0][i] < Lx_min ) insert_array3D( XYZ, PaddedField, i, Lx, 0, -Lz );
-            else if( XYZ[0][i] > Lx_max ) insert_array3D( XYZ, PaddedField, i, -Lx, 0, -Lz );
-            if( XYZ[1][i] < Ly_min )
+            if( XYZ[i][0] < Lx_min ) insert_array3D( XYZ, PaddedField, i, Lx, 0, -Lz );
+            else if( XYZ[i][0] > Lx_max ) insert_array3D( XYZ, PaddedField, i, -Lx, 0, -Lz );
+            if( XYZ[i][1] < Ly_min )
             {
                 insert_array3D( XYZ, PaddedField, i, 0, Ly, -Lz );
-                if( XYZ[0][i] < Lx_min ) insert_array3D( XYZ, PaddedField, i, Lx, Ly, -Lz );
-                else if( XYZ[0][i] > Lx_max ) insert_array3D( XYZ, PaddedField, i, -Lx, Ly, -Lz );
+                if( XYZ[i][0] < Lx_min ) insert_array3D( XYZ, PaddedField, i, Lx, Ly, -Lz );
+                else if( XYZ[i][0] > Lx_max ) insert_array3D( XYZ, PaddedField, i, -Lx, Ly, -Lz );
             }
-            else if( XYZ[1][i] > Ly_max )
+            else if( XYZ[i][1] > Ly_max )
             {
                 insert_array3D( XYZ, PaddedField, i, 0, -Ly, -Lz );
-                if( XYZ[0][i] < Lx_min ) insert_array3D( XYZ, PaddedField, i, Lx, -Ly, -Lz );
-                else if( XYZ[0][i] > Lx_max ) insert_array3D( XYZ, PaddedField, i, -Lx, -Ly, -Lz );
+                if( XYZ[i][0] < Lx_min ) insert_array3D( XYZ, PaddedField, i, Lx, -Ly, -Lz );
+                else if( XYZ[i][0] > Lx_max ) insert_array3D( XYZ, PaddedField, i, -Lx, -Ly, -Lz );
             }
         }
         // ---------------------------------------------------------------------
@@ -196,10 +192,10 @@ DToutput To_Delaunay_3D(
 {
     DToutput output;
 
-    size_t Nsize = XYZ[0].size();
+    size_t Nsize = XYZ.size();
     vector< pair<Point,size_t> > points;
     for(size_t i=0; i<Nsize; i++)
-        points.push_back( make_pair( Point_3(XYZ[0][i], XYZ[1][i], XYZ[2][i]), i ) );
+        points.push_back( make_pair( Point_3(XYZ[i][0], XYZ[i][1], XYZ[i][2]), i ) );
     
     Delaunay tess(points.begin(), points.end());
     assert(tess.is_valid());
@@ -250,13 +246,16 @@ DToutput To_Delaunay_3D(
 /* Interpolate the density & velocity field on 3D grid mesh */
 // ----------------------------------------------------------------------------------------
 
-MeshOutput_3D<double> InterploateGrid_3D( 
+MeshOutput_3D<float> InterploateGrid_3D( 
             DToutput output,
-            double L[NDIM], int Ngrid[NDIM]
+            double L_min[NDIM], double L_max[NDIM], 
+            int Ngrid[NDIM]
             )
 {
-    vector<double> dx = { L[0]/Ngrid[0], L[1]/Ngrid[1], L[2]/Ngrid[2] };
-    MeshOutput_3D<double> meshValues(Ngrid);
+    vector<double> dx = { (L_max[0]-L_min[0])/Ngrid[0], 
+                          (L_max[1]-L_min[1])/Ngrid[1], 
+                          (L_max[2]-L_min[2])/Ngrid[2] };
+    MeshOutput_3D<float> meshValues(Ngrid);
 
     Delaunay dt = output.tess;
     Delaunay::Locate_type lt;
@@ -264,15 +263,15 @@ MeshOutput_3D<double> InterploateGrid_3D(
 
     int li, lj;
     double Gridx, Gridy, Gridz;
-    Gridx = -0.5* dx[0];
+    Gridx = L_min[0] -0.5* dx[0];
     for( int i0=0 ; i0<Ngrid[0]; i0++ )
     {
         Gridx += dx[0];
-        Gridy = -0.5* dx[1];
+        Gridy = L_min[1] -0.5* dx[1];
         for( int i1=0 ; i1<Ngrid[1]; i1++ )
         {
             Gridy += dx[1];
-            Gridz = -0.5* dx[2];
+            Gridz = L_min[2] -0.5* dx[2];
             for( int i2=0 ; i2<Ngrid[2]; i2++ )
             {
                 Gridz += dx[2];
@@ -292,7 +291,7 @@ MeshOutput_3D<double> InterploateGrid_3D(
                     for(int j=0; j<NDIM; j++)    // over 3 dimensions (x, y, z)
                     {
                         diff_pos[i][j] = CGAL::to_double( current->vertex(i+1)->point()[j] - baseP[j] );
-                        diff_vel[i][j] = output.field_vel[j][ivert] - output.field_vel[j][ivert0] ;    // The velocity is stored as (dims, particles)
+                        diff_vel[i][j] = output.field_vel[ivert][j] - output.field_vel[ivert0][j] ;    // The velocity is stored as (dims, particles)
                     }
                 }
                 double posMatrixInverse[NDIM][NDIM];
@@ -306,10 +305,10 @@ MeshOutput_3D<double> InterploateGrid_3D(
                 double dpos[NDIM] = {Gridx - CGAL::to_double(baseP[0]), 
                                      Gridy - CGAL::to_double(baseP[1]), 
                                      Gridz - CGAL::to_double(baseP[2]) };
-                meshValues.Mesh_rho[i0][i1][i2] = output.field_rho[ivert0]    + dotProduct3(Grad_den, dpos);
-                meshValues.Mesh_vx[i0][i1][i2]  = output.field_vel[0][ivert0] + dotProduct3(Grad_vel[0], dpos);
-                meshValues.Mesh_vy[i0][i1][i2]  = output.field_vel[1][ivert0] + dotProduct3(Grad_vel[1], dpos);
-                meshValues.Mesh_vz[i0][i1][i2]  = output.field_vel[2][ivert0] + dotProduct3(Grad_vel[2], dpos);
+                meshValues.Mesh_rho[i0][i1][i2] = (float)( output.field_rho[ivert0]    + dotProduct3(Grad_den, dpos) );
+                meshValues.Mesh_vx[i0][i1][i2]  = (float)( output.field_vel[ivert0][0] + dotProduct3(Grad_vel[0], dpos) );
+                meshValues.Mesh_vy[i0][i1][i2]  = (float)( output.field_vel[ivert0][1] + dotProduct3(Grad_vel[1], dpos) );
+                meshValues.Mesh_vz[i0][i1][i2]  = (float)( output.field_vel[ivert0][2] + dotProduct3(Grad_vel[2], dpos) );
                 /* ------------------------------------------------------------------------------ */
             }
         }
@@ -323,7 +322,7 @@ MeshOutput_3D<double> InterploateGrid_3D(
 /* Interpolate the density & velocity field on given sampling points */
 // ----------------------------------------------------------------------------------------
 
-vector<vector<double>> Interploate_3D( 
+vector<vector<float>> Interploate_3D( 
             DToutput output,
             vector<vector<double>> samplingPoint
             )
@@ -334,7 +333,7 @@ vector<vector<double>> Interploate_3D(
     Delaunay::Cell_handle current;
 
     int Nsamples = samplingPoint[0].size();
-    vector<vector<double>> meshValues(4, vector<double>(Nsamples, 0.));  // (Nkind, Nsamples)
+    vector<vector<float>> meshValues(4, vector<float>(Nsamples, 0.));  // (Nkind, Nsamples)
 
     for(int isam=0; isam<Nsamples; isam++)
     {
@@ -357,7 +356,7 @@ vector<vector<double>> Interploate_3D(
             for(int j=0; j<NDIM; j++)    // over 3 dimensions (x, y, z)
             {
                 diff_pos[i][j] = CGAL::to_double( current->vertex(i+1)->point()[j] - baseP[j] );
-                diff_vel[i][j] = output.field_vel[j][ivert] - output.field_vel[j][ivert0] ;    // The velocity is stored as (dims, particles)
+                diff_vel[i][j] = output.field_vel[ivert][j] - output.field_vel[ivert0][j] ;    // The velocity is stored as (dims, particles)
             }
         }
         double posMatrixInverse[NDIM][NDIM];
@@ -371,10 +370,10 @@ vector<vector<double>> Interploate_3D(
         double dpos[NDIM] ={Gridx - CGAL::to_double(baseP[0]), 
                             Gridy - CGAL::to_double(baseP[1]), 
                             Gridz - CGAL::to_double(baseP[2]) };
-        meshValues[0][isam] = output.field_rho[ivert0]    + dotProduct3(Grad_den, dpos);
-        meshValues[1][isam] = output.field_vel[0][ivert0] + dotProduct3(Grad_vel[0], dpos);
-        meshValues[2][isam] = output.field_vel[1][ivert0] + dotProduct3(Grad_vel[1], dpos);
-        meshValues[3][isam] = output.field_vel[2][ivert0] + dotProduct3(Grad_vel[2], dpos);
+        meshValues[0][isam] = (float)( output.field_rho[ivert0]    + dotProduct3(Grad_den, dpos) );
+        meshValues[1][isam] = (float)( output.field_vel[ivert0][0] + dotProduct3(Grad_vel[0], dpos) );
+        meshValues[2][isam] = (float)( output.field_vel[ivert0][1] + dotProduct3(Grad_vel[1], dpos) );
+        meshValues[3][isam] = (float)( output.field_vel[ivert0][2] + dotProduct3(Grad_vel[2], dpos) );
         /* ------------------------------------------------------------------------------ */
     }
     return meshValues;
@@ -386,7 +385,7 @@ vector<vector<double>> Interploate_3D(
 /* Interpolate the scalar field on given sampling points */
 // ----------------------------------------------------------------------------------------
 
-vector<double> Interploate_3D_ScalarField( 
+vector<float> Interploate_3D_ScalarField( 
             DToutput output,
             vector<vector<double>> samplingPoint, 
             vector<double> scalarField       // same size as particle position number
@@ -398,8 +397,8 @@ vector<double> Interploate_3D_ScalarField(
     Delaunay::Cell_handle current;
 
     int Nsamples = samplingPoint[0].size();
-    vector<double> out_dens;
-    vector<double> out_scal;
+    vector<float> out_dens;
+    vector<float> out_scal;
 
     for(int isam=0; isam<Nsamples; isam++)
     {
@@ -433,8 +432,8 @@ vector<double> Interploate_3D_ScalarField(
         double dpos[NDIM] ={Gridx - CGAL::to_double(baseP[0]), 
                             Gridy - CGAL::to_double(baseP[1]), 
                             Gridz - CGAL::to_double(baseP[2]) };
-        out_dens[isam] = output.field_rho[ivert0] + dotProduct3(Grad_den , dpos);
-        out_scal[isam] = scalarField[ivert0]      + dotProduct3(Grad_scal, dpos);
+        out_dens[isam] = (float)( output.field_rho[ivert0] + dotProduct3(Grad_den , dpos) );
+        out_scal[isam] = (float)( scalarField[ivert0]      + dotProduct3(Grad_scal, dpos) );
         /* ------------------------------------------------------------------------------ */
     }
     return out_scal;

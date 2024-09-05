@@ -3,11 +3,10 @@
 
 ## Introduction
 
-In this project, we offer a user-friendly Python implementation of the **Delaunay Tessellation Field Interpolation (DTFE)** method. The source code has been rewritten from the publicly available C++ [DTFE](https://github.com/MariusCautun/DTFE/) code, with functions wrapped using `Pybind11``. This allows users to easily access the DTFE method in Python while maintaining the high efficiency of C++."
+In this project, we offer a user-friendly Python implementation of the **Delaunay Tessellation Field Interpolation (DTFE)** method. The source code has been rewritten from the publicly available C++ [DTFE](https://github.com/MariusCautun/DTFE/) code, with functions wrapped using `Pybind11``. This allows users to easily access the DTFE method in Python while maintaining the high efficiency of C++.
 
 ### Feature
-* DTFE interpolation of the particle density & velocity on the uniform grid for 3D/2D simulation box.
-* DTFE interpolation of any 3D/2D scalar field.
+* DTFE interpolation of the particle <strong>density, velocity or any scalar field</strong> on the uniform grid for 3D/2D simulation box.
 * Interpolation on arbitrary 3D/2D sampling points.
 * High efficiency with C++ backend and easy coding with Python language.
 * The code is more compact, allowing for direct modification.
@@ -49,7 +48,7 @@ Nparticles = 200657
 pos = np.fromfile( DATA_PATH_POS, dtype="float32" ).reshape(Nparticles, 3)
 vel = np.fromfile( DATA_PATH_VEL, dtype="float32" ).reshape(Nparticles, 3)
 
-dtfe = DTFE_3D( pos, L=L, Nmesh=N)
+dtfe = DTFE( pos, L=L, Nmesh=N)
 results = dtfe.GridVel(vel)    # interpolation on grid
 dens = results[0 ]    # shape(N, N, N)
 velo = results[1:]    # shape(3, N, N, N)
