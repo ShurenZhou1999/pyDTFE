@@ -42,9 +42,9 @@ import sys
 sys.path.append("/path/to/pyDTFE/location")
 from pyDTFE import DTFE_3D
 
-L = 60  # Mpc/h
-N = 100
-Nparticles = 200657
+L = 1200  # Mpc/h
+N = 1200
+Nparticles = 26351544
 pos = np.fromfile( DATA_PATH_POS, dtype="float32" ).reshape(Nparticles, 3)
 vel = np.fromfile( DATA_PATH_VEL, dtype="float32" ).reshape(Nparticles, 3)
 
@@ -57,11 +57,17 @@ velo = results[1:]    # shape(3, N, N, N)
 Below shows the result.
 
 ```python
+imap1 = dataMesh[0][120] /np.mean(dataMesh[0]) -1
+imap2 = dataMesh[1][120]
+
 fig, axes = plt.subplots( 1, 2, dpi=100, figsize=(8, 4) )
-axes[0].imshow( dens[2] /np.mean(dens) -1 , vmin=-1, vmax=3, )
+axes[0].imshow( dens[2] /np.mean(dens) -1  , vmin=-1, vmax=3, )
 axes[1].imshow( velo[0][2]  )
 axes[0].set_title(r"$\delta$", fontsize=15 )
 axes[1].set_title(r"$v_x$", fontsize=15 )
+axes[0].set_xlabel("Y [$h^{-1}Mpc$]")
+axes[1].set_xlabel("Y [$h^{-1}Mpc$]")
+axes[0].set_ylabel("Z [$h^{-1}Mpc$]")
 plt.tight_layout()
 plt.show()
 ```
